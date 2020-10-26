@@ -1,0 +1,4 @@
+startup() ::= "Project Pricefield - IRC Test-Client"
+runtime(id) ::= "Runtime ID: <id>"
+version(v) ::= "v.<v>"
+tests(ts) ::= "Selected Tests: <ts>"
