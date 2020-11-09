@@ -24,7 +24,7 @@ class PriceReporter(testCount: Integer) extends Reporter {
         _testCount = _testCount - 1
         TerminalHelper.displayTestStatus(testName, TerminalHelper.FAILURE, finish = true)
 
-      case ev => print()
+      case _ =>
     }
   }
 }

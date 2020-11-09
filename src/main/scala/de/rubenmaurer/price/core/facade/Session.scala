@@ -1,16 +1,18 @@
 package de.rubenmaurer.price.core.facade
 
 import java.io.FileWriter
+import java.lang.Thread.sleep
 import java.util.concurrent.TimeUnit
 
+import akka.actor.typed.scaladsl.AskPattern.{Askable, schedulerFromActorSystem}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter.{ClassicActorRefOps, TypedActorContextOps}
-import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.util.Timeout
+import de.rubenmaurer.price.PriceIRC
 import de.rubenmaurer.price.core._
 import de.rubenmaurer.price.core.networking.ConnectionHandler
 import de.rubenmaurer.price.util.Configuration
-import org.scalatest.Assertions.fail
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -23,11 +25,17 @@ object Session {
   def apply(suite: ActorRef[Command]): Behavior[Command] = {
     Behaviors.setup { context =>
       def refreshServerStatus(): Behavior[Command] = {
-        try {
-          context.actorOf(ConnectionHandler.props(context.system.ignoreRef)).toTyped
-          facade.online = true
-        } catch {
-          case _: Throwable => facade.online = false
+        if (!facade.online) {
+          var dummy: ActorRef[Any] = context.system.ignoreRef
+
+          try {
+            dummy = context.actorOf(ConnectionHandler.apply(context.system.ignoreRef)).toTyped
+            facade.online = true
+          } catch {
+            case _: Throwable => facade.online = false
+          } finally {
+            dummy ! "close"
+          }
         }
 
         Behaviors.same
@@ -37,11 +45,24 @@ object Session {
 
       Behaviors.receive[Command] { (context, message) =>
         message match {
-          case SpawnClient(preset) =>
-            val intern = context.spawn(Client(preset), preset.username)
-            val connectionHandler = context.actorOf(ConnectionHandler.props(intern)).toTyped
+          case Request(command, sender) =>
+            command match {
+              case SpawnClient(preset) =>
+                context.log.debug("SpawnClient")
+                preset.intern = context.spawn(Client(preset), preset.username)
+                Thread.sleep(50)
 
-            preset.link(intern)
+                sender ! Reply(preset, context.self)
+
+                Behaviors.same
+            }
+
+          case Reply(payload, sender) =>
+            println(payload)
+            Behaviors.same
+
+          case Debug(message) =>
+            context.log.debug(message)
             Behaviors.same
 
           case SingleTestFinished =>
@@ -71,17 +92,21 @@ class Session() {
   def online: Boolean = _online
   def online_= (status: Boolean): Unit = _online = status
 
-  def start(testName: String): Unit = {
+  def start(testName: String): Future[Boolean] = {
     _logLines = _logLines.empty
     _writer = new FileWriter(Configuration.getLogFile(testName))
     _process = Configuration.executable().run(ProcessLogger(line => _logLines = line :: _logLines , line => _logLines.appended(line)))
 
     //Thread.sleep(5000) //dafq?!
-    Await.ready(Future {
-      do {
-        //intern ! RefreshServerStatus
-      } while (!online)
-    }, timeout.duration)
+    Future {
+      while (!online) {
+        intern ! RefreshServerStatus
+      }
+
+      online
+    }
+
+    //Await.ready(f, timeout.duration)
   }
 
   def stop(): Unit = {
@@ -101,11 +126,13 @@ class Session() {
   }
 
   def spawnClient(client: Client): Client = {
-    Await.result(Future {
-      intern ! SpawnClient(client)
-      while (!client.linked) Thread.sleep(50)
+    implicit val timeout: Timeout = Timeout(3, TimeUnit.SECONDS)
+    implicit val system: ActorSystem[_] = PriceIRC.system
 
-      client
-    }, timeout.duration)
+    Await.result(intern.ask[Reply[Client]](pre => Request(SpawnClient(client), pre)), timeout.duration).payload
+  }
+
+  def debug(message: String): Unit = {
+    _intern ! Debug(message)
   }
 }

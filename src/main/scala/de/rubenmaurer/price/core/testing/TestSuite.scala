@@ -20,11 +20,13 @@ object TestSuite {
       Behaviors.receive[Command] { (context, message) =>
         message match {
           case RunTestSuite =>
+            context.log.debug(s"Execute TestSuite ${suite.suiteName}")
             TerminalHelper.displayTestSuite(suite.suiteName)
             context.self ! RunSingleTest
             Behaviors.same
 
           case RunSingleTest =>
+            context.log.debug(s"Execute Single Test ${tests.head}")
             suite.runTests(Option(tests.head), Args.apply(reporter = new PriceReporter(suite.testNames.size)))
             tests = tests.drop(1)
             Behaviors.same

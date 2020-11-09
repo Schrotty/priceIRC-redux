@@ -3,17 +3,20 @@ package de.rubenmaurer.price.core.networking
 import java.net.InetSocketAddress
 
 import akka.actor.typed.ActorRef
+import akka.actor.typed.scaladsl.adapter.ClassicActorRefOps
 import akka.actor.{Actor, Props}
 import akka.io.{IO, Tcp}
 import akka.util.ByteString
-import de.rubenmaurer.price.core.Command
+import de.rubenmaurer.price.core.{Command, Parse, Reply, Send}
 import de.rubenmaurer.price.util.Configuration
 
 object ConnectionHandler {
-  def props(listener: ActorRef[Command]): Props = Props(new ConnectionHandler(listener))
+  def apply(listener: ActorRef[Command]): Props = Props(new ConnectionHandler(listener))
 }
 
 class ConnectionHandler(listener: ActorRef[Command]) extends Actor {
+
+  var expectedResponseLines = 0
 
   import Tcp._
   import context.system
@@ -25,17 +28,26 @@ class ConnectionHandler(listener: ActorRef[Command]) extends Actor {
     case CommandFailed(_: Connect) =>
       context.stop(self)
 
-    case Connected(remote, local) =>
-      //listener ! RegisterListener(self.toTyped)
+    case c @ Connected(_, _) =>
       val connection = sender()
       connection ! Register(self)
 
       context.become {
-        case data: ByteString =>
-          connection ! Write(data)
+        case Send(payload, expected) =>
+          this.expectedResponseLines = expected
+          connection ! Write(ByteString(payload))
+
+          if (this.expectedResponseLines == 0) {
+            listener ! Reply("done", context.self.toTyped)
+          }
 
         case Received(data) =>
-          printf(data.decodeString("US-ASCII"))
+          val message = data.decodeString("US-ASCII")
+          val lines = message.split("\r\n")
+
+          if (this.expectedResponseLines <= lines.size) {
+            listener ! Reply("done", context.self.toTyped)
+          }
 
         case "close" =>
           connection ! Close

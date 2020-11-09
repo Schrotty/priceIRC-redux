@@ -7,7 +7,7 @@ scalaVersion := "2.13.2"
 libraryDependencies ++= Seq(
   //ANTLR
   "org.antlr" % "ST4" % "4.3.1",
-  "org.antlr" % "antlr4-runtime" % "4.6",
+  "org.antlr" % "antlr4-runtime" % "4.8",
   "org.antlr" % "stringtemplate" % "3.2",
 
   //AKKA

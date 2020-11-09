@@ -4,12 +4,19 @@ import akka.actor.typed.ActorRef
 import de.rubenmaurer.price.core.facade.Client
 
 trait Command
-trait ReplyType
 
-case class Request(command: Command, sender: ActorRef[Reply]) extends Command
-case class Reply(ref: ActorRef[Any]) extends Command
+case class Request[A](command: Command, sender: ActorRef[Reply[A]]) extends Command
+
+case class Reply[A](payload: A, sender: ActorRef[Command]) extends Command
 case class SpawnClient(preset: Client) extends Command
+case class SpawnedClient(preset: Client) extends Command
+
 case class RegisterListener(actorRef: ActorRef[Command]) extends Command
+
+case class Parse(payload: String) extends Command
+case class Send(payload: String, expected: Int = 0) extends Command
+case class Debug(message: String) extends Command
+case object Done extends Command
 
 case object SpawnConnection extends Command
 case object RunSingleTest extends Command
