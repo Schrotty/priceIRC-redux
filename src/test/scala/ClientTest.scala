@@ -1,8 +1,13 @@
-import de.rubenmaurer.price.core.facade.Client
+import java.util.concurrent.TimeUnit
+
+import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorSystem, Behavior}
+import akka.util.Timeout
+import de.rubenmaurer.price.PriceIRC
 import org.scalatest.funsuite.AnyFunSuite
 
 class ClientTest extends AnyFunSuite {
-  test("chloes username ist 'elisabeth'") {
-    assert(Client.CHLOE.username == "elisabeth")
+  test("get code log") {
+    true
   }
 }

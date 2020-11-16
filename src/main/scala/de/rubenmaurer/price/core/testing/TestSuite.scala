@@ -3,7 +3,7 @@ package de.rubenmaurer.price.core.testing
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
 import de.rubenmaurer.price.core._
-import de.rubenmaurer.price.core.facade.Session
+import de.rubenmaurer.price.core.facade.{Parser, Session}
 import de.rubenmaurer.price.test.BaseTestSuite
 import de.rubenmaurer.price.util.TerminalHelper
 import org.scalatest.Args
@@ -11,10 +11,11 @@ import org.scalatest.Args
 object TestSuite {
   def apply(ts: String): Behavior[Command] =
     Behaviors.setup{ context =>
-      val suite: BaseTestSuite = Class.forName(String.format("de.rubenmaurer.price.test.%s", ts)).getDeclaredConstructor(classOf[Session], classOf[String]).newInstance(Session.facade, ts).asInstanceOf[BaseTestSuite]
+      val suite: BaseTestSuite = Class.forName(String.format("de.rubenmaurer.price.test.%s", ts)).getDeclaredConstructor(classOf[Session], classOf[Parser], classOf[String]).newInstance(Session.facade, Parser.facade, ts).asInstanceOf[BaseTestSuite]
       var tests: Set[String] = suite.testNames
 
       context.watch(context.spawn(Session.apply(context.self), "session"))
+      context.watch(context.spawn(Parser.apply(), "parser"))
 
       context.self ! RunTestSuite
       Behaviors.receive[Command] { (context, message) =>

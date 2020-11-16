@@ -7,7 +7,7 @@ import akka.actor.typed.scaladsl.adapter.ClassicActorRefOps
 import akka.actor.{Actor, Props}
 import akka.io.{IO, Tcp}
 import akka.util.ByteString
-import de.rubenmaurer.price.core.{Command, Parse, Reply, Send}
+import de.rubenmaurer.price.core.{Command, Reply, Send}
 import de.rubenmaurer.price.util.Configuration
 
 object ConnectionHandler {
@@ -28,7 +28,7 @@ class ConnectionHandler(listener: ActorRef[Command]) extends Actor {
     case CommandFailed(_: Connect) =>
       context.stop(self)
 
-    case c @ Connected(_, _) =>
+    case Connected(_, _) =>
       val connection = sender()
       connection ! Register(self)
 
@@ -38,7 +38,7 @@ class ConnectionHandler(listener: ActorRef[Command]) extends Actor {
           connection ! Write(ByteString(payload))
 
           if (this.expectedResponseLines == 0) {
-            listener ! Reply("done", context.self.toTyped)
+            listener ! Reply("", context.self.toTyped)
           }
 
         case Received(data) =>
@@ -46,7 +46,7 @@ class ConnectionHandler(listener: ActorRef[Command]) extends Actor {
           val lines = message.split("\r\n")
 
           if (this.expectedResponseLines <= lines.size) {
-            listener ! Reply("done", context.self.toTyped)
+            listener ! Reply(message, context.self.toTyped)
           }
 
         case "close" =>

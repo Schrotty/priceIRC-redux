@@ -5,16 +5,14 @@ import java.util.concurrent.TimeUnit
 import akka.util.Timeout
 import de.rubenmaurer.price.core.facade._
 import org.scalactic.Requirements.requireNonNull
+import org.scalatest._
 import org.scalatest.events.{SeeStackDepthException, TestFailed}
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest._
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
 
-class BaseTestSuite(session: Session, testName: String) extends AnyFunSuite with BeforeAndAfter {
+class BaseTestSuite(session: Session, parser: Parser, testName: String) extends AnyFunSuite with BeforeAndAfter {
   before {
     Await.result(session.start(testName), Timeout(3, TimeUnit.SECONDS).duration)
   }

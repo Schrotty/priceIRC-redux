@@ -1,12 +1,9 @@
 package de.rubenmaurer.price.core.facade
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor.typed.scaladsl.AskPattern.{Askable, schedulerFromActorSystem}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter.{ClassicActorRefOps, TypedActorContextOps}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
-import akka.util.Timeout
 import de.rubenmaurer.price.PriceIRC
 import de.rubenmaurer.price.core._
 import de.rubenmaurer.price.core.facade.Session.facade.timeout
@@ -42,18 +39,17 @@ object Client {
 
               case Send(_, _) =>
                 context.log.debug("Pre-Send")
-                implicit val timeout: Timeout = Timeout(3, TimeUnit.SECONDS)
                 implicit val system: ActorSystem[_] = context.system
-
                 implicit val ec: ExecutionContextExecutor = system.executionContext
+
                 tmpSender = sender
                 connectionHandler ! command
 
                 Behaviors.same
             }
 
-          case Reply(_, _) =>
-            tmpSender ! Reply("done", context.self)
+          case Reply(message, _) =>
+            tmpSender ! Reply(message, context.self)
             Behaviors.same
 
           case _ => Behaviors.same
@@ -64,25 +60,42 @@ object Client {
 }
 
 class Client(var nickname: String, val username: String, val fullName: String) {
-  private var _intern: ActorRef[Command] = _
+  object log {
+    var codes: Map[Int, String] = Map[Int, String]()
+    var plain: List[String] = List[String]()
 
-  def intern: ActorRef[Command] = _intern
-  def intern_= (ref: ActorRef[Command]):Unit = _intern = ref
+    /* === plain log methods === */
+    def last: String = plain.head
+    def startWith(input: String): String = plain.find(_.startsWith(input)).getOrElse("")
 
-  def link(actorRef: ActorRef[Command]): Unit = {
-    intern = actorRef
+    /* === code log methods === */
+    def byCode(code: Int): String = codes.apply(code)
   }
 
+  private var _intern: ActorRef[Command] = _
+  def intern: ActorRef[Command] = _intern
+
   def linked: Boolean = intern != null
+  def link(actorRef: ActorRef[Command]): Unit = {
+    _intern = actorRef
+  }
 
   def send(message: String, expected: Int = 0): Unit = {
     try {
       implicit val system: ActorSystem[_] = PriceIRC.system
       implicit val ec: ExecutionContextExecutor = system.executionContext
 
-      Await.ready(intern.ask[Command](pre => {
+      val reply: Reply[String] = Await.result(intern.ask[Reply[String]](pre => {
         Request(Send(message, expected), pre)
       }), timeout.duration)
+
+      val code = """(\d{3})(.+)""".r
+      for (line <- reply.payload.split("\r\n")) {
+        line match {
+          case code(code, message) => log.codes = log.codes + (code.toInt -> message)
+          case _ => log.plain = reply.payload :: log.plain
+        }
+      }
     } catch {
       case e: Exception => e.printStackTrace()
     }

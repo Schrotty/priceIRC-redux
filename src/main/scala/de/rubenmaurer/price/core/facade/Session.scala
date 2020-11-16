@@ -1,7 +1,6 @@
 package de.rubenmaurer.price.core.facade
 
 import java.io.FileWriter
-import java.lang.Thread.sleep
 import java.util.concurrent.TimeUnit
 
 import akka.actor.typed.scaladsl.AskPattern.{Askable, schedulerFromActorSystem}
@@ -26,7 +25,7 @@ object Session {
     Behaviors.setup { context =>
       def refreshServerStatus(): Behavior[Command] = {
         if (!facade.online) {
-          var dummy: ActorRef[Any] = context.system.ignoreRef
+          var dummy: ActorRef[String] = context.system.ignoreRef
 
           try {
             dummy = context.actorOf(ConnectionHandler.apply(context.system.ignoreRef)).toTyped
@@ -49,29 +48,23 @@ object Session {
             command match {
               case SpawnClient(preset) =>
                 context.log.debug("SpawnClient")
-                preset.intern = context.spawn(Client(preset), preset.username)
+                preset.link(context.spawn(Client(preset), preset.username))
                 Thread.sleep(50)
 
                 sender ! Reply(preset, context.self)
-
-                Behaviors.same
             }
 
-          case Reply(payload, sender) =>
+          case Reply(payload, _) =>
             println(payload)
-            Behaviors.same
-
-          case Debug(message) =>
-            context.log.debug(message)
-            Behaviors.same
 
           case SingleTestFinished =>
             context.children.foreach(f => context.stop(f))
             suite ! SingleTestFinished
-            Behaviors.same
 
           case RefreshServerStatus => refreshServerStatus()
         }
+
+        Behaviors.same
       }
     }
   }
@@ -97,16 +90,12 @@ class Session() {
     _writer = new FileWriter(Configuration.getLogFile(testName))
     _process = Configuration.executable().run(ProcessLogger(line => _logLines = line :: _logLines , line => _logLines.appended(line)))
 
-    //Thread.sleep(5000) //dafq?!
     Future {
       while (!online) {
         intern ! RefreshServerStatus
       }
-
       online
     }
-
-    //Await.ready(f, timeout.duration)
   }
 
   def stop(): Unit = {
@@ -130,9 +119,5 @@ class Session() {
     implicit val system: ActorSystem[_] = PriceIRC.system
 
     Await.result(intern.ask[Reply[Client]](pre => Request(SpawnClient(client), pre)), timeout.duration).payload
-  }
-
-  def debug(message: String): Unit = {
-    _intern ! Debug(message)
   }
 }

@@ -13,7 +13,6 @@ case class SpawnedClient(preset: Client) extends Command
 
 case class RegisterListener(actorRef: ActorRef[Command]) extends Command
 
-case class Parse(payload: String) extends Command
 case class Send(payload: String, expected: Int = 0) extends Command
 case class Debug(message: String) extends Command
 case object Done extends Command

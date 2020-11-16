@@ -2,11 +2,12 @@ package de.rubenmaurer.price.test
 
 object TestIndex {
   private val _suites: Map[String, String] = Map(
-    "unit" -> "UnitTest"
+    "ping" -> "ping.Ping",
+    "pong" -> "ping.Pong"
   )
 
   private val _assignments: Map[String, List[String]] = Map(
-    "ALL" -> List(_suites.apply("unit"))
+    "ALL" -> List(_suites.apply("ping"), _suites.apply("pong"))
   )
 
   def getAll(keys: String*): List[String] =
