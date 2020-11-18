@@ -1,7 +1,5 @@
 package de.rubenmaurer.price.util
 
-import java.io.{File, IOException, PrintStream}
-
 import com.typesafe.config.ConfigFactory
 
 object Configuration {
@@ -18,22 +16,4 @@ object Configuration {
   def tests():String = configFactory.getString("price.tests")
   def logs(): String = configFactory.getString("price.logs")
   def debug(): Boolean = configFactory.getBoolean("price.debug")
-
-  def getLogFile(filename: String): File = new File(String.format("%s\\%s\\%s.txt", logs(), runtimeIdentifier, filename))
-
-  def initialSetup(): Unit = {
-    val logDir = new File(logs())
-    if (!logDir.exists()) {
-      if (!logDir.mkdir()) {
-        throw new IOException("Unable to create logs folder!")
-      }
-    }
-
-    val runtimeDirectory = new File(s"${logs()}\\$runtimeIdentifier")
-    if (!runtimeDirectory.exists()) {
-      if (!runtimeDirectory.mkdir()) {
-        throw new IOException("unable ro create runtime folder!")
-      }
-    }
-  }
 }

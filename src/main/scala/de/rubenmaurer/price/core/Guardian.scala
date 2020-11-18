@@ -11,26 +11,19 @@ object Guardian {
     Behaviors.setup { context =>
       context.log.debug("Guardian started!")
 
-      Configuration.initialSetup()
-
       //spawn children
       val testManager = context.spawn(TestManager(), "test-manager")
-      val terminalManager = context.spawn(TerminalManager(), "terminal-manager")
 
       //watch children
       context.watchWith(testManager, Finished())
-      context.watch(terminalManager)
 
       //print startup message
       TerminalHelper.displayStartup()
-      /*context.log.info(TemplateManager.getStartupMessage)
-      context.log.info(TemplateManager.getRuntimeID)
-      context.log.info(TemplateManager.getTests)*/
 
       //issue startup commands
       testManager ! Execute()
 
-      Behaviors.receive[Command] { (context, message) =>
+      Behaviors.receive[Command] { (_, message) =>
         message match {
           case Finished() =>
             Behaviors.stopped

@@ -1,6 +1,5 @@
 package de.rubenmaurer.price.core.facade
 
-import java.io.FileWriter
 import java.util.concurrent.TimeUnit
 
 import akka.actor.typed.scaladsl.AskPattern.{Askable, schedulerFromActorSystem}
@@ -8,10 +7,13 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter.{ClassicActorRefOps, TypedActorContextOps}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.util.Timeout
+import com.typesafe.scalalogging.Logger
 import de.rubenmaurer.price.PriceIRC
 import de.rubenmaurer.price.core._
 import de.rubenmaurer.price.core.networking.ConnectionHandler
 import de.rubenmaurer.price.util.Configuration
+import de.rubenmaurer.price.util.Configuration.runtimeIdentifier
+import org.slf4j.MDC
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
@@ -32,6 +34,7 @@ object Session {
             facade.online = true
           } catch {
             case _: Throwable => facade.online = false
+            Behaviors.stopped
           } finally {
             dummy ! "close"
           }
@@ -75,9 +78,11 @@ class Session() {
 
   private var _process: Process = _
   private var _logLines: List[String] = List[String]()
-  private var _writer: FileWriter = _
+
   private var _intern: ActorRef[Command] = _
   private var _online: Boolean = false
+
+  private var _logger: Logger = _
 
   def intern: ActorRef[Command] = _intern
   def intern_= (ref: ActorRef[Command]): Unit = _intern = ref
@@ -85,15 +90,18 @@ class Session() {
   def online: Boolean = _online
   def online_= (status: Boolean): Unit = _online = status
 
+  def logger: Logger = _logger
+
   def start(testName: String): Future[Boolean] = {
+    MDC.put("runtime-id", runtimeIdentifier.toString)
+    MDC.put("test", testName)
+
+    _logger = Logger("test")
     _logLines = _logLines.empty
-    _writer = new FileWriter(Configuration.getLogFile(testName))
     _process = Configuration.executable().run(ProcessLogger(line => _logLines = line :: _logLines , line => _logLines.appended(line)))
 
     Future {
-      while (!online) {
-        intern ! RefreshServerStatus
-      }
+      while (!online) intern ! RefreshServerStatus
       online
     }
   }
@@ -102,10 +110,7 @@ class Session() {
     if (_process != null && _process.isAlive()) {
       _process.destroy()
 
-      _writer.write(_logLines.reverse.mkString("\r\n"))
-      _writer.flush()
-      _writer.close()
-
+      Logger("process").info(_logLines.reverse.mkString("\r\n"))
       intern ! SingleTestFinished
 
       if (_process.isAlive) {

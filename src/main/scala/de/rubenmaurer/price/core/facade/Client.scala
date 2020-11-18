@@ -4,15 +4,26 @@ import akka.actor.typed.scaladsl.AskPattern.{Askable, schedulerFromActorSystem}
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.adapter.{ClassicActorRefOps, TypedActorContextOps}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
+import akka.util.Timeout
+
+import scala.util.{Failure, Success}
 import de.rubenmaurer.price.PriceIRC
-import de.rubenmaurer.price.core._
+import de.rubenmaurer.price.core.facade.Client.{Command, Request, Response, SendMessage}
 import de.rubenmaurer.price.core.facade.Session.facade.timeout
 import de.rubenmaurer.price.core.networking.ConnectionHandler
 
+import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object Client {
-  var tmpSender: ActorRef[Reply[Any]] =  _
+  sealed trait Command
+
+  case class Request(command: Command, replyTo: ActorRef[Response]) extends Command
+  case class Response(payload: String) extends Command
+  case class SendMessage(message: String, expected: Int) extends Command
+
+  private case class AdaptedResponse(message: String, replyTo: ActorRef[Response]) extends Command
+  private case class WrappedConnectionResponse(response: ConnectionHandler.Response) extends Command
 
   def CHLOE: Client = new Client("chloe", "elisabeth", "Chloe Elisabeth Price")
   def MAX: Client = new Client("max", "maxine", "Maxine Caulfield")
@@ -21,35 +32,26 @@ object Client {
 
   def apply(client: Client): Behavior[Command] = {
     Behaviors.setup { context =>
-      context.log.debug("Client spawned!")
-      var connectionHandler: ActorRef[Command] = context.actorOf(ConnectionHandler.apply(context.self)).toTyped
+      context.log.debug(s"Spawned ${client.username}")
+      val connectionMapper: ActorRef[ConnectionHandler.Response] = context.messageAdapter(rsp => WrappedConnectionResponse(rsp))
+      val connectionHandler: ActorRef[ConnectionHandler.Request] = context.actorOf(ConnectionHandler.apply(connectionMapper)).toTyped
 
       Behaviors.receive[Command] { (context, message) =>
-        context.log.debug("Received message: " + message)
-
         message match {
-          case Request(command, sender) =>
-            context.log.debug("Received command: " + command)
-
+          case Request(command, replyTo) =>
             command match {
-              case RegisterListener(actorRef) =>
-                connectionHandler = actorRef
-                sender ! Reply(true, sender=context.self)
-                Behaviors.same
-
-              case Send(_, _) =>
-                context.log.debug("Pre-Send")
-                implicit val system: ActorSystem[_] = context.system
-                implicit val ec: ExecutionContextExecutor = system.executionContext
-
-                tmpSender = sender
-                connectionHandler ! command
+              case SendMessage(message, expected) =>
+                implicit val timeout: Timeout = 3.seconds
+                context.ask[ConnectionHandler.Request, ConnectionHandler.Response](connectionHandler, _ => ConnectionHandler.Send(message, expected, connectionMapper)) {
+                  case Success(response: ConnectionHandler.Received) => AdaptedResponse(response.payload, replyTo)
+                  case Failure(_) => AdaptedResponse("Request failed!", replyTo)
+                }
 
                 Behaviors.same
             }
 
-          case Reply(message, _) =>
-            tmpSender ! Reply(message, context.self)
+          case AdaptedResponse(message, replyTo) =>
+            replyTo ! Response(message)
             Behaviors.same
 
           case _ => Behaviors.same
@@ -85,8 +87,8 @@ class Client(var nickname: String, val username: String, val fullName: String) {
       implicit val system: ActorSystem[_] = PriceIRC.system
       implicit val ec: ExecutionContextExecutor = system.executionContext
 
-      val reply: Reply[String] = Await.result(intern.ask[Reply[String]](pre => {
-        Request(Send(message, expected), pre)
+      val reply: Response = Await.result(intern.ask[Response](pre => {
+        Request(SendMessage(message, expected), pre)
       }), timeout.duration)
 
       val code = """(\d{3})(.+)""".r
@@ -97,7 +99,7 @@ class Client(var nickname: String, val username: String, val fullName: String) {
         }
       }
     } catch {
-      case e: Exception => e.printStackTrace()
+      case e: Exception =>
     }
   }
 }

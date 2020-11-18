@@ -3,18 +3,23 @@ package de.rubenmaurer.price.core.networking
 import java.net.InetSocketAddress
 
 import akka.actor.typed.ActorRef
-import akka.actor.typed.scaladsl.adapter.ClassicActorRefOps
 import akka.actor.{Actor, Props}
 import akka.io.{IO, Tcp}
 import akka.util.ByteString
-import de.rubenmaurer.price.core.{Command, Reply, Send}
+import de.rubenmaurer.price.core.networking.ConnectionHandler.{Response, Send}
 import de.rubenmaurer.price.util.Configuration
 
 object ConnectionHandler {
-  def apply(listener: ActorRef[Command]): Props = Props(new ConnectionHandler(listener))
+  sealed trait Request
+  final case class Send(message: String, expected: Int, replyTo: ActorRef[Response]) extends Request
+
+  sealed trait Response
+  final case class Received(payload: String) extends Response
+
+  def apply(listener: ActorRef[Response]): Props = Props(new ConnectionHandler(listener))
 }
 
-class ConnectionHandler(listener: ActorRef[Command]) extends Actor {
+class ConnectionHandler(listener: ActorRef[Response]) extends Actor {
 
   var expectedResponseLines = 0
 
@@ -33,12 +38,12 @@ class ConnectionHandler(listener: ActorRef[Command]) extends Actor {
       connection ! Register(self)
 
       context.become {
-        case Send(payload, expected) =>
+        case Send(payload, expected, replyTo) =>
           this.expectedResponseLines = expected
           connection ! Write(ByteString(payload))
 
           if (this.expectedResponseLines == 0) {
-            listener ! Reply("", context.self.toTyped)
+            replyTo ! ConnectionHandler.Received("")
           }
 
         case Received(data) =>
@@ -46,7 +51,7 @@ class ConnectionHandler(listener: ActorRef[Command]) extends Actor {
           val lines = message.split("\r\n")
 
           if (this.expectedResponseLines <= lines.size) {
-            listener ! Reply(message, context.self.toTyped)
+            listener ! ConnectionHandler.Received(message)
           }
 
         case "close" =>

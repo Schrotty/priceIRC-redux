@@ -7,7 +7,7 @@ object TestIndex {
   )
 
   private val _assignments: Map[String, List[String]] = Map(
-    "ALL" -> List(_suites.apply("ping"), _suites.apply("pong"))
+    "ALL" -> _suites.values.toList
   )
 
   def getAll(keys: String*): List[String] =

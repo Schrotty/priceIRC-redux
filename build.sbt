@@ -24,6 +24,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.apache.logging.log4j" %% "log4j-api-scala" % "12.0",
   "org.apache.logging.log4j" % "log4j-core" % "2.13.0" % Runtime,
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
 
   "org.fusesource.jansi" % "jansi" % "1.18",
 

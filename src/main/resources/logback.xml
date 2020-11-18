@@ -1,16 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-
-    <appender name="PRODUCTION" class="ch.qos.logback.core.ConsoleAppender">
-        <withJansi>false</withJansi>
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
-        <encoder>
-            <pattern>[%highlight(%level)] %message%n</pattern>
-        </encoder>
-    </appender>
-
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/price.log</file>
         <encoder>
@@ -18,8 +7,44 @@
         </encoder>
     </appender>
 
+    <appender name="PROCESS" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator>
+            <key>runtime-id</key>
+            <defaultValue>unknown</defaultValue>
+        </discriminator>
+        <sift>
+            <appender name="FILE-${runtime-id}" class="ch.qos.logback.core.FileAppender">
+                <file>logs/${runtime-id}/process.log</file>
+                <layout class="ch.qos.logback.classic.PatternLayout">
+                    <pattern>[%date{ISO8601}] [%level] [%logger] - %n%msg%n</pattern>
+                </layout>
+            </appender>
+        </sift>
+    </appender>
+
+    <appender name="TEST" class="ch.qos.logback.classic.sift.SiftingAppender">
+        <discriminator class="de.rubenmaurer.price.logback.CustomDiscriminator">
+            <key>key</key>
+        </discriminator>
+        <sift>
+            <appender name="TEST-${key}" class="ch.qos.logback.core.FileAppender">
+                <file>logs/${key}.log</file>
+                <layout class="ch.qos.logback.classic.PatternLayout">
+                    <pattern>[%date{ISO8601}] [%level] [%logger] - %msg%n</pattern>
+                </layout>
+            </appender>
+        </sift>
+    </appender>
+
+    <logger name="process" level="INFO" additivity="false">
+        <appender-ref ref="PROCESS"/>
+    </logger>
+
+    <logger name="test" level="INFO" additivity="false">
+        <appender-ref ref="TEST"/>
+    </logger>
+
     <root level="DEBUG">
-        <appender-ref ref="PRODUCTION"/>
         <appender-ref ref="FILE"/>
     </root>
 </configuration>
