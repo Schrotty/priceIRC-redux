@@ -19,4 +19,10 @@ object TemplateManager {
   def getVersionString: String = getRawTemplate("version").add("v", BuildInfo.version).render()
   def getRuntimeID: String = getRawTemplate("runtime").add("id", Configuration.runtimeIdentifier).render()
   def getTests: String = getRawTemplate("tests").add("ts", TestIndex.getAll("ALL").mkString(",")).render()
+  def getConnectionFailure(address: String): String = getRawTemplate("connectionFailure").add("address", address).render()
+
+  // irc templates
+  def getNick(nickname: String): String = getRawTemplate("nick").add("nickname", nickname).render()
+  def getUser(username: String, fullname: String): String = getRawTemplate("user").add("username", username)
+    .add("fullname", fullname).render()
 }

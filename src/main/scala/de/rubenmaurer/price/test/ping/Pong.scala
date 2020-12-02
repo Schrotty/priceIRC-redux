@@ -8,6 +8,6 @@ class Pong(session: Session, parser: Parser, testName: String) extends BaseTestS
     val chloe: Client = session.spawnClient(Client.CHLOE)
     chloe.send("PONG")
 
-    assert(parser.isEmpty(chloe.log.last))
+    assert(parser.isEmpty(chloe))
   }
 }

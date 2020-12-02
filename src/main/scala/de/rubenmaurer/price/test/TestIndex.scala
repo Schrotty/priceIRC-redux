@@ -3,7 +3,8 @@ package de.rubenmaurer.price.test
 object TestIndex {
   private val _suites: Map[String, String] = Map(
     "ping" -> "ping.Ping",
-    "pong" -> "ping.Pong"
+    "pong" -> "ping.Pong",
+    "unknown" -> "unknown.Unknown"
   )
 
   private val _assignments: Map[String, List[String]] = Map(

@@ -14,7 +14,9 @@ import scala.concurrent.Await
 
 class BaseTestSuite(session: Session, parser: Parser, testName: String) extends AnyFunSuite with BeforeAndAfter {
   before {
-    Await.result(session.start(testName), Timeout(3, TimeUnit.SECONDS).duration)
+    if (!Await.result(session.start(testName), Timeout(3, TimeUnit.SECONDS).duration)) {
+      throw new RuntimeException("Failed!")
+    }
   }
 
   after {

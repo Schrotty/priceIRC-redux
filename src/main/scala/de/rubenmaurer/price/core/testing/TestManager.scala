@@ -1,42 +1,42 @@
 package de.rubenmaurer.price.core.testing
 
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{Behavior, Terminated}
-import de.rubenmaurer.price.core.Command
+import akka.actor.typed.{ActorRef, Behavior}
+import de.rubenmaurer.price.core.testing.TestSuite.{SuiteFailure, SuiteSuccess}
 import de.rubenmaurer.price.test.TestIndex
 import de.rubenmaurer.price.util.Configuration
 
 object TestManager {
 
-  case class Execute() extends Command
-  case class Finished() extends Command
+  sealed trait Command
+  private final case class WrappedSuiteResponse(response: TestSuite.Response) extends Command
 
   def apply(): Behavior[Command] =
     Behaviors.setup { context =>
-      context.log.debug("TestManager started!")
-
+      val suiteMapper: ActorRef[TestSuite.Response] = context.messageAdapter(rsp => WrappedSuiteResponse(rsp))
       var testSuites: List[String] = TestIndex.getAll(Configuration.tests())
+
       def spawnTestSuite(): Behavior[Command] = {
-          context.log.debug("Spawn test suite")
-          context.watchWith(context.spawnAnonymous(TestSuite(testSuites.head)), Finished())
+          if (testSuites.isEmpty) return Behaviors.stopped
+          context.spawnAnonymous(TestSuite(testSuites.head, suiteMapper)) ! TestSuite.Execute
+
           testSuites = testSuites.filter(s => !s.equals(testSuites.head))
           Behaviors.same
       }
 
       spawnTestSuite()
-      Behaviors.receive[Command] { (context, message) =>
-        context.log.debug(s"Received $message!")
+      Behaviors.receive[Command] { (_, message) =>
         message match {
-          case Finished() =>
-            if (testSuites.nonEmpty) spawnTestSuite() else Behaviors.stopped
+          case wrapped: WrappedSuiteResponse =>
+            wrapped.response match {
+              case SuiteSuccess => spawnTestSuite()
+              case failure: SuiteFailure =>
+                context.log.error(failure.message.toString)
+                Behaviors.stopped
 
-          case _ =>
-            Behaviors.same
+              case _ => Behaviors.same
+            }
         }
-      }.receiveSignal {
-          case (context, Terminated(ref)) =>
-            context.log.debug("Actor stopped: {}", ref.path.name)
-            Behaviors.stopped
       }
     }
 }

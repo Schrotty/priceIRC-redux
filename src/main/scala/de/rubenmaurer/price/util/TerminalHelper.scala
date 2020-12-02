@@ -27,6 +27,12 @@ object TerminalHelper {
     println(divider)
   }
 
+  def displayConnectionFailure(address: String): Unit = {
+    println(divider)
+    println(centerAndWrap(TemplateManager.getConnectionFailure(address)))
+    println(divider)
+  }
+
   def displayTestStatus(test: String, status: String, finish: Boolean = false): Unit = {
     val emptySpace = " ".repeat(TerminalSize - (test.length + status.length) - 2)
     var finStatus = status

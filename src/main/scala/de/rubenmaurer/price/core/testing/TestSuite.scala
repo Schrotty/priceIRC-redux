@@ -1,47 +1,68 @@
 package de.rubenmaurer.price.core.testing
 
-import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import de.rubenmaurer.price.core._
+import akka.actor.typed.{ActorRef, Behavior}
+import de.rubenmaurer.price.core.facade.Session.{ConnectionError, TestFinished}
 import de.rubenmaurer.price.core.facade.{Parser, Session}
 import de.rubenmaurer.price.test.BaseTestSuite
-import de.rubenmaurer.price.util.TerminalHelper
+import de.rubenmaurer.price.util.{Configuration, TerminalHelper}
 import org.scalatest.Args
 
 object TestSuite {
-  def apply(ts: String): Behavior[Command] =
+
+  sealed trait Request
+  final case object Execute extends Request
+  final case object RunTest extends Request
+
+  sealed trait Response
+  final case class SuiteFailure(message: Any) extends Response
+  final case object SuiteSuccess extends Response
+
+  private final case class WrappedSessionResponse(response: Session.Response) extends Response with Request
+
+  def apply(ts: String, parent: ActorRef[Response]): Behavior[Request] =
     Behaviors.setup{ context =>
+      val sessionMapper: ActorRef[Session.Response] = context.messageAdapter(replyTo => WrappedSessionResponse(replyTo))
+
       val suite: BaseTestSuite = Class.forName(String.format("de.rubenmaurer.price.test.%s", ts)).getDeclaredConstructor(classOf[Session], classOf[Parser], classOf[String]).newInstance(Session.facade, Parser.facade, ts).asInstanceOf[BaseTestSuite]
       var tests: Set[String] = suite.testNames
 
-      context.watch(context.spawn(Session.apply(context.self), "session"))
+      context.watch(context.spawn(Session.apply(sessionMapper), "session"))
       context.watch(context.spawn(Parser.apply(), "parser"))
 
-      context.self ! RunTestSuite
-      Behaviors.receive[Command] { (context, message) =>
+      Behaviors.receive[Request] { (context, message) =>
         message match {
-          case RunTestSuite =>
-            context.log.debug(s"Execute TestSuite ${suite.suiteName}")
+          case Execute =>
             TerminalHelper.displayTestSuite(suite.suiteName)
-            context.self ! RunSingleTest
+            context.self ! RunTest
             Behaviors.same
 
-          case RunSingleTest =>
-            context.log.debug(s"Execute Single Test ${tests.head}")
+          case RunTest =>
             suite.runTests(Option(tests.head), Args.apply(reporter = new PriceReporter(suite.testNames.size)))
             tests = tests.drop(1)
             Behaviors.same
 
-          case SingleTestFinished =>
-            if (tests.nonEmpty) context.self ! RunSingleTest else context.self ! AllTestsFinished
-            Behaviors.same
+          case wrapped: WrappedSessionResponse =>
+            wrapped.response match {
+              case connectionError: ConnectionError =>
+                TerminalHelper.displayConnectionFailure(s"${Configuration.hostname()}:${Configuration.port()}")
+                parent ! SuiteFailure(connectionError.failureMessage.toString())
 
-          case AllTestsFinished =>
-            TerminalHelper.displayTestSuiteResult()
-            Behaviors.stopped
+                Behaviors.stopped
 
-          case _ =>
-            Behaviors.same
+              case TestFinished =>
+                if (tests.nonEmpty) context.self ! RunTest
+                else {
+                  TerminalHelper.displayTestSuiteResult()
+                  parent ! SuiteSuccess
+
+                  Behaviors.stopped
+                }
+
+                Behaviors.same
+
+              case _ => Behaviors.same
+            }
         }
       }
     }

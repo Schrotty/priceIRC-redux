@@ -10,6 +10,7 @@ import de.rubenmaurer.price.PriceIRC
 import de.rubenmaurer.price.antlr.{IRCLexer, IRCParser}
 import de.rubenmaurer.price.core.facade.Parser.{Parse, ParseResult}
 import de.rubenmaurer.price.core.parser.antlr.{PricefieldErrorListener, PricefieldListener}
+import de.rubenmaurer.price.util.IRCCode
 import org.antlr.v4.runtime.{CharStreams, CommonTokenStream}
 
 import scala.concurrent.Await
@@ -64,11 +65,17 @@ class Parser() {
     parse(message, parserRule).result.isEmpty
   }
 
-  def isPong(message: String): Boolean = {
-    isValid(message, IRCParser.RULE_pong)
+  /* === plain log methods === */
+  def isPong(client: Client): Boolean = {
+    isValid(client.log.startWith("PONG"), IRCParser.RULE_pong)
   }
 
-  def isEmpty(message: String): Boolean = {
-    message.isBlank || message.isEmpty
+  def isEmpty(client: Client): Boolean = {
+    client.log.plain.isEmpty
+  }
+
+  /* === code log methods === */
+  def isUnknown(client: Client): Boolean = {
+    isValid(client.log.codes.getOrElse(IRCCode.unknown_command, ""), IRCParser.RULE_unknown_command)
   }
 }

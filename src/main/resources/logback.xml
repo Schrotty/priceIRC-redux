@@ -16,7 +16,7 @@
             <appender name="FILE-${runtime-id}" class="ch.qos.logback.core.FileAppender">
                 <file>logs/${runtime-id}/process.log</file>
                 <layout class="ch.qos.logback.classic.PatternLayout">
-                    <pattern>[%date{ISO8601}] [%level] [%logger] - %n%msg%n</pattern>
+                    <pattern>[%date{ISO8601}] [%level] - %n%msg%n</pattern>
                 </layout>
             </appender>
         </sift>
@@ -30,7 +30,7 @@
             <appender name="TEST-${key}" class="ch.qos.logback.core.FileAppender">
                 <file>logs/${key}.log</file>
                 <layout class="ch.qos.logback.classic.PatternLayout">
-                    <pattern>[%date{ISO8601}] [%level] [%logger] - %msg%n</pattern>
+                    <pattern>[%date{ISO8601}] [%level] - %msg%n</pattern>
                 </layout>
             </appender>
         </sift>
