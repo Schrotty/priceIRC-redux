@@ -26,11 +26,11 @@ object Client {
   def CHLOE: Client = new Client("chloe", "elisabeth", "Chloe Elisabeth Price")
   def MAX: Client = new Client("max", "maxine", "Maxine Caulfield")
   def RACHEl: Client = new Client("rachel", "ramber", "Rachel Amber")
-  def KATE: Client = new Client("kate", "bunny_mommy", "Kate Marsh")
+  def KATE: Client = new Client("kate", "bunnymommy", "Kate Marsh")
 
   def apply(client: Client): Behavior[Command] = {
     Behaviors.setup { context =>
-      context.log.debug(s"Spawned ${client.username}")
+      context.log.debug(s"SPAWNED: ${client.username}")
 
       var response: List[String] = List()
       var expectedLines: Int = 0
@@ -81,7 +81,7 @@ class Client(var nickname: String, val username: String, val fullName: String) {
     def startWith(input: String): String = plain.find(_.startsWith(input)).getOrElse("")
 
     /* === code log methods === */
-    def byCode(code: Int): String = codes.apply(code)
+    def byCode(code: Int): String = codes.getOrElse(code, "")
 
     /* === utils === */
     def clearPlain(): Unit = plain = List()
@@ -101,11 +101,37 @@ class Client(var nickname: String, val username: String, val fullName: String) {
     this
   }
 
+  def authenticateWithSwapped(): Client = {
+    send(TemplateManager.getUser(this.username, this.fullName))
+    send(TemplateManager.getNick(this.nickname), 10)
+    this
+  }
+
+  def authenticateWithWhitespace(): Client = {
+    send(s"  ${TemplateManager.getNick(this.nickname)}  ")
+    send(s"  ${TemplateManager.getUser(this.username, this.fullName)}  ", 10)
+    this
+  }
+
+  def nick(expectResponse: Boolean = false): Client = {
+    send(TemplateManager.getNick(this.nickname), if (expectResponse) 10 else 0)
+    this
+  }
+
+  def user(expectResponse: Boolean = false): Client = {
+    send(TemplateManager.getUser(this.username, this.fullName), if (expectResponse) 10 else 0)
+    this
+  }
+
+  def whois(client: Client, shouldFail: Boolean = false): Unit = {
+    send(TemplateManager.whois(client.nickname), if(shouldFail) 1 else 3)
+  }
+
   def send(message: String): Unit = {
     implicit val system: ActorSystem[_] = PriceIRC.system
     implicit val ec: ExecutionContextExecutor = system.executionContext
 
-    Session.logger.info(s"$nickname transmit '$message'")
+    Session.logger.info(s"$nickname SEND -- $message")
     intern.ask[Response](replyTo => Request(SendMessage(message, 0), replyTo))
   }
 
@@ -116,12 +142,12 @@ class Client(var nickname: String, val username: String, val fullName: String) {
       implicit val ec: ExecutionContextExecutor = system.executionContext
 
       //log.clearPlain()
-      Session.logger.info(s"$nickname transmit '$message'")
+      Session.logger.info(s"$nickname SEND -- $message")
       val reply: Response = Await.result(intern.ask[Response](replyTo => {
         Request(SendMessage(message, expected), replyTo)
       }), timeout.duration)
 
-      val code = """(.*)(\d{3})(.*)""".r
+      val code = """(.+?)(\d{3})(.*)""".r
       for (line <- reply.payload.split("\r\n")) {
         line match {
           case code(_, command, _) =>
@@ -131,7 +157,7 @@ class Client(var nickname: String, val username: String, val fullName: String) {
             log.plain = line :: log.plain
         }
 
-        Session.logger.info(s"$nickname received '$line'")
+        Session.logger.info(s"$nickname RECV -- $line")
       }
     }
     catch

@@ -10,3 +10,4 @@ connectionFailure(address) ::= "Unable to establish connection with <address>"
 // irc templates
 nick(nickname) ::= "NICK <nickname>"
 user(username, fullname) ::= "USER <username> * * :<fullname>"
+whois(nickname) ::= "WHOIS <nickname>"

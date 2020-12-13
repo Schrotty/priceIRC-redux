@@ -4,7 +4,10 @@ object TestIndex {
   private val _suites: Map[String, String] = Map(
     "ping" -> "ping.Ping",
     "pong" -> "ping.Pong",
-    "unknown" -> "unknown.Unknown"
+    "unknown" -> "unknown.Unknown",
+    "robustness" -> "robustness.Robustness",
+    "whois" -> "whois.Whois",
+    "basic-connection" -> "connection.BasicConnection"
   )
 
   private val _assignments: Map[String, List[String]] = Map(

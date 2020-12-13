@@ -10,7 +10,7 @@ import akka.io.Tcp.CommandFailed
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import de.rubenmaurer.price.PriceIRC
-import de.rubenmaurer.price.core.facade.Session.{Request, SpawnClient, SpawnedClient, logger}
+import de.rubenmaurer.price.core.facade.Session.{Request, SpawnClient, SpawnedClient}
 import de.rubenmaurer.price.core.networking.ConnectionHandler
 import de.rubenmaurer.price.util.Configuration
 import de.rubenmaurer.price.util.Configuration.runtimeIdentifier

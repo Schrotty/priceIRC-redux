@@ -22,5 +22,6 @@ class PricefieldErrorListener extends BaseErrorListener {
   @throws[ParseCancellationException]
   override def syntaxError(recognizer: Recognizer[_, _], offendingSymbol: Any, line: Int, charPositionInLine: Int, msg: String, e: RecognitionException): Unit = {
     _exceptions = String.format("%s%s!", msg.substring(0, 1).toUpperCase, msg.substring(1)) :: _exceptions
+    //throw e
   }
 }

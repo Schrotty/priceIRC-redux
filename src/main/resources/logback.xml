@@ -3,7 +3,7 @@
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/price.log</file>
         <encoder>
-            <pattern>[%date{ISO8601}] [%level] [%logger] - %msg%n</pattern>
+            <pattern>[%date{HH:mm:ss}] [%level] [%logger] -- %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -16,7 +16,7 @@
             <appender name="FILE-${runtime-id}" class="ch.qos.logback.core.FileAppender">
                 <file>logs/${runtime-id}/process.log</file>
                 <layout class="ch.qos.logback.classic.PatternLayout">
-                    <pattern>[%date{ISO8601}] [%level] - %n%msg%n</pattern>
+                    <pattern>[%date{HH:mm:ss}] [%level] -- %n%msg%n</pattern>
                 </layout>
             </appender>
         </sift>
@@ -30,7 +30,7 @@
             <appender name="TEST-${key}" class="ch.qos.logback.core.FileAppender">
                 <file>logs/${key}.log</file>
                 <layout class="ch.qos.logback.classic.PatternLayout">
-                    <pattern>[%date{ISO8601}] [%level] - %msg%n</pattern>
+                    <pattern>[%date{HH:mm:ss}] [%level] -- %msg%n</pattern>
                 </layout>
             </appender>
         </sift>
