@@ -43,12 +43,8 @@ class ConnectionHandler(listener: ActorRef[Response]) extends Actor {
       listener ! ConnectionHandler.Success(context.self.toTyped)
 
       context.become {
-        case Send(payload, expected, replyTo) =>
-          connection ! Write(ByteString(payload.concat("\r\n")))
-
-        case Received(data) =>
-          listener ! ConnectionHandler.Received(data.decodeString("US-ASCII"))
-
+        case Send(payload, expected, replyTo) => connection ! Write(ByteString(payload.concat("\r\n")))
+        case Received(data) => listener ! ConnectionHandler.Received(data.decodeString("US-ASCII"))
         case Disconnect => connection ! Close
         case _: ConnectionClosed => context.stop(self)
       }

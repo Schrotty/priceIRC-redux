@@ -131,6 +131,7 @@ response
     | listend
     | who
     | end_of_who
+    | nick_reply
     ;
 
 pong
@@ -139,6 +140,10 @@ pong
 
 quit
     : server_response 'Closing Link' DLIMIT WHITESPACE server WHITESPACE '(' message ')'
+    ;
+
+nick_reply
+    : server_response WHITESPACE 'NICK' WHITESPACE DLIMIT nick
     ;
 
 /* === WELCOME === */
@@ -219,7 +224,7 @@ no_topic
 
 topic
     : server_response WHITESPACE 'TOPIC' WHITESPACE channel WHITESPACE DLIMIT message
-    | server_response WHITESPACE channel WHITESPACE DLIMIT message
+    | server_response WHITESPACE channel WHITESPACE DLIMIT (message | 'No topic is set')
     ;
 
 /* === LIST === */

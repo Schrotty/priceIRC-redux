@@ -27,4 +27,19 @@ object TemplateManager {
     .add("fullname", fullname).render()
 
   def whois(nickname: String): String = getRawTemplate("whois").add("nickname", nickname).render()
+  def getQuit(message: String): String = getRawTemplate("quit").add("message", message).render()
+  def getPrivateMessage(nickname: String, message: String): String = getRawTemplate("privateMessage")
+    .add("nickname", nickname).add("message", message).render()
+
+  def getNotice(nickname: String, message: String): String = getRawTemplate("notice")
+    .add("nickname", nickname).add("message", message).render()
+
+  def join(channel: String): String = getRawTemplate("join").add("channel", channel).render()
+  def who(channel: String): String = getRawTemplate("who").add("channel", channel).render()
+  def getTopic(channel: String): String = getRawTemplate("get_topic").add("channel", channel).render()
+  def setTopic(channel: String, topic: String): String = getRawTemplate("set_topic").add("channel", channel)
+    .add("topic", topic).render()
+
+  def part(channel: String, message: String): String = getRawTemplate("part").add("channel", channel).add("message", message).render()
+  def list(channel: String): String = getRawTemplate("list").add("channel", channel).render()
 }

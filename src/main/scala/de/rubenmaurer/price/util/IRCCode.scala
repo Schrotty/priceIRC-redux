@@ -18,6 +18,7 @@ object IRCCode extends Enumeration {
   val end_of_who = 315
   val end_of_who_is = 318
   val list = 322
+  val list_end = 323
   val no_topic = 331
   val topic = 332
   val who_reply = 352

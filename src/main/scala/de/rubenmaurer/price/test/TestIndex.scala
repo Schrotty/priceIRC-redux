@@ -7,11 +7,23 @@ object TestIndex {
     "unknown" -> "unknown.Unknown",
     "robustness" -> "robustness.Robustness",
     "whois" -> "whois.Whois",
-    "basic-connection" -> "connection.BasicConnection"
+    "basic-connection" -> "connection.BasicConnection",
+    "multi-user-connection" -> "connection.MultiUserConnection",
+    "quit-connection" -> "connection.QuitConnection",
+    "private-message" -> "privmsg.NoticePrivateMessage",
+    "motd" -> "motd.MessageOfTheDay",
+    "who" -> "channel.WhoChannel",
+    "join" -> "channel.JoinChannel",
+    "topic" -> "channel.TopicChannel",
+    "part" -> "channel.PartChannel",
+    "assignment" -> "channel.AssignmentChannel",
+    "list" -> "channel.ListChannel",
+    "private-message-channel" -> "channel.PrivateMessageChannel"
   )
 
   private val _assignments: Map[String, List[String]] = Map(
-    "ALL" -> _suites.values.toList
+    "ALL" -> _suites.values.toList,
+    "CHANNEL" -> _suites.values.filter(x => x.contains("channel.")).toList
   )
 
   def getAll(keys: String*): List[String] =
