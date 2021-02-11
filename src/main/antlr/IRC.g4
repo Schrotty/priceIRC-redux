@@ -215,7 +215,7 @@ end_of_names
     ;
 
 part
-    : server_response WHITESPACE 'PART' WHITESPACE channel
+    : server_response WHITESPACE 'PART' WHITESPACE channel (WHITESPACE DLIMIT message)?
     ;
 
 no_topic

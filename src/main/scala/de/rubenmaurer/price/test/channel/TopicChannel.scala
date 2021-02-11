@@ -10,7 +10,7 @@ class TopicChannel(session: Session, parser: Parser, testName: String) extends B
     val topic: String = "Hello there!"
 
     val kate: Client = session.spawnClient(Client.KATE).authenticate().join(channel).topic(channel, topic)
-    assert(parser.isTopic(kate))
+    assert(parser.isTopic(kate, channel, topic))
   }
 
   test("get topic") {
@@ -18,20 +18,20 @@ class TopicChannel(session: Session, parser: Parser, testName: String) extends B
     val channel: Channel = Channel.BLACKWELL
     val max: Client = session.spawnClient(Client.MAX).authenticate().join(channel).topic(channel, topic).topic(channel)
 
-    assert(parser.isTopic(max))
+    assert(parser.isTopic(max, channel, topic))
   }
 
   test("get 'no topic set'") {
     val channel: Channel = Channel.DINER
     val kate: Client = session.spawnClient(Client.KATE).authenticate().join(channel).topic(channel)
 
-    assert(parser.isNoTopicSet(kate))
+    assert(parser.isNoTopicSet(kate, channel))
   }
 
   test("not on channel") {
     val channel: Channel = Channel.BLACKWELL_SCIENCE
     val rachel: Client = session.spawnClient(Client.RACHEl).authenticate().topic(channel)
 
-    assert(parser.isNotOnChannel(rachel))
+    assert(parser.isNotOnChannel(rachel, channel))
   }
 }

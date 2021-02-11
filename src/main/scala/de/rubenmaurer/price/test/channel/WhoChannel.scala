@@ -10,7 +10,7 @@ class WhoChannel(session: Session, parser: Parser, testName: String) extends Bas
     session.spawnClient(Client.RACHEl).authenticate().join(Channel.BLACKWELL_ART)
     session.spawnClient(Client.MAX).authenticate().join(Channel.DINER)
 
-    assert(parser.isWho(kate.who(Channel.BLACKWELL_ART, 2)))
+    assert(parser.isWho(kate.who(Channel.BLACKWELL_ART, 2), Channel.BLACKWELL_ART, List(kate, Client.RACHEl): _*))
   }
 
   test("who is all") {
@@ -18,6 +18,6 @@ class WhoChannel(session: Session, parser: Parser, testName: String) extends Bas
     session.spawnClient(Client.MAX).authenticate().join(Channel.DINER)
     session.spawnClient(Client.KATE).authenticate()
 
-    assert(parser.isWho(rachel.who("*", 1)))
+    assert(parser.isWho(rachel.who("*", 1), Channel.ALL, List(Client.KATE): _*))
   }
 }

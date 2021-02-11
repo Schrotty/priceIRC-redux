@@ -9,13 +9,13 @@ class Whois(session: Session, parser: Parser, testName: String) extends BaseTest
     val chloe: Client = session.spawnClient(Client.CHLOE).authenticate()
 
     chloe.whois(rachel)
-    assert(parser.isWhois(chloe))
+    assert(parser.isWhois(chloe, rachel))
   }
 
   test("whois with unknown user") {
     val chloe: Client = session.spawnClient(Client.CHLOE).authenticate()
 
     chloe.whois(Client.RACHEl, shouldFail = true)
-    assert(parser.isNoSuchNick(chloe))
+    assert(parser.isNoSuchNick(chloe, Client.RACHEl))
   }
 }

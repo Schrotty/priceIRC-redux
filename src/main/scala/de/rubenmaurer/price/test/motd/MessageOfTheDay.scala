@@ -13,12 +13,12 @@ class MessageOfTheDay(session: Session, parser: Parser, testName: String) extend
 
   test("list multiple user") {
     assert(parser.isLUser(session.spawnClient(Client.KATE).authenticate()))
-    assert(parser.isLUser(session.spawnClient(Client.CHLOE).authenticate()))
+    assert(parser.isLUser(session.spawnClient(Client.CHLOE).authenticate(), clients = 2, users = 2))
   }
 
   test("list multiple user with unregistered") {
     session.spawnClient(Client.CHLOE)
-    assert(parser.isLUser(session.spawnClient(Client.MAX).authenticate()))
+    assert(parser.isLUser(session.spawnClient(Client.MAX).authenticate(), users = 2, unknown = 1))
   }
 
   test("lusers") {
@@ -30,11 +30,12 @@ class MessageOfTheDay(session: Session, parser: Parser, testName: String) extend
     session.spawnClient(Client.MAX).authenticate()
     val rachel: Client = session.spawnClient(Client.RACHEl).authenticate()
 
-    assert(parser.isLUser(rachel.lusers()))
+    assert(parser.isLUser(rachel.lusers(), clients = 3, users = 3))
   }
 
   test("lusers with channels") {
-    assert(parser.isLUser(session.spawnClient(Client.KATE).authenticate().join(Channel.BLACKWELL)))
+    session.spawnClient(Client.MAX).authenticate().join(Channel.BLACKWELL)
+    assert(parser.isLUser(session.spawnClient(Client.KATE).authenticate(), clients = 2, users = 2, channels = 1))
   }
 
   test("lusers mixed") {
@@ -42,13 +43,18 @@ class MessageOfTheDay(session: Session, parser: Parser, testName: String) extend
     session.spawnClient(Client.RACHEl).authenticate().join(Channel.DINER)
     session.spawnClient(Client.MAX).authenticate().join(Channel.BLACKWELL_ART)
 
-    assert(parser.isLUser(session.spawnClient(Client.CHLOE).authenticate().lusers()))
+    assert(parser.isLUser(session.spawnClient(Client.CHLOE).authenticate().lusers(), clients = 4, users = 4, channels = 2))
   }
 
-  test("mesage of the day") {
-    new PrintWriter("motd.txt") { write("Hello there!"); close() }
+  test("no message of the day") {
+    assert(parser.isNoMessageOfTheDay(session.spawnClient(Client.MAX).authenticate()))
+  }
 
-    assert(parser.isWelcome(session.spawnClient(Client.KATE).authenticate()))
+  test("message of the day") {
+    val message = "Hello there!"
+    new PrintWriter("motd.txt") { write(message); close() }
+
+    assert(parser.isMessageOfTheDay(session.spawnClient(Client.KATE).authenticate().motd(), message))
     new File("motd.txt").delete()
   }
 }

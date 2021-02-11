@@ -8,7 +8,7 @@ class JoinChannel(session: Session, parser: Parser, testName: String) extends Ba
   test("join channel") {
     val max: Client = session.spawnClient(Client.MAX).authenticate()
 
-    assert(parser.isJoin(max.join(Channel.BLACKWELL)))
+    assert(parser.isJoin(max.join(Channel.BLACKWELL), Channel.BLACKWELL, max))
   }
 
   test("join already joined channel") {
@@ -19,10 +19,13 @@ class JoinChannel(session: Session, parser: Parser, testName: String) extends Ba
   }
 
   test("multiple joins") {
-    val kate: Client = session.spawnClient(Client.KATE).authenticate().join(Channel.DINER)
-    val chloe: Client = session.spawnClient(Client.CHLOE).authenticate().join(Channel.DINER)
-    val max: Client = session.spawnClient(Client.MAX).authenticate().join(Channel.DINER)
+    val channel: Channel = Channel.DINER
+    val kate: Client = session.spawnClient(Client.KATE).authenticate().join(channel)
+    val chloe: Client = session.spawnClient(Client.CHLOE).authenticate().join(channel)
+    val max: Client = session.spawnClient(Client.MAX).authenticate().join(channel)
 
-    assert(parser.isJoin(kate) && parser.isJoin(chloe) && parser.isJoin(max))
+    assert(parser.isJoin(kate, channel, kate) &&
+      parser.isJoin(chloe, channel, kate, chloe) &&
+      parser.isJoin(max, channel, kate, chloe, max))
   }
 }

@@ -20,6 +20,8 @@ object TemplateManager {
   def getRuntimeID: String = getRawTemplate("runtime").add("id", Configuration.runtimeIdentifier).render()
   def getTests: String = getRawTemplate("tests").add("ts", TestIndex.getAll("ALL").mkString(",")).render()
   def getConnectionFailure(address: String): String = getRawTemplate("connectionFailure").add("address", address).render()
+  def getCompareFailure(typ: String, expected: Any, actual: Any, line: String): String = getRawTemplate("compareFailure")
+    .add("type", typ).add("expected", expected).add("actual", actual).add("line", line).render()
 
   /* === IRC REQUESTS ===*/
   def getNick(nickname: String): String = getRawTemplate("nick").add("nickname", nickname).render()

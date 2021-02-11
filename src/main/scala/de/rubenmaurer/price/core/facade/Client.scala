@@ -9,7 +9,7 @@ import de.rubenmaurer.price.PriceIRC
 import de.rubenmaurer.price.core.facade.Client._
 import de.rubenmaurer.price.core.facade.Session.facade.timeout
 import de.rubenmaurer.price.core.networking.ConnectionHandler
-import de.rubenmaurer.price.util.{Channel, TemplateManager}
+import de.rubenmaurer.price.util.{Channel, Target, TemplateManager}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor, TimeoutException}
@@ -84,9 +84,9 @@ object Client {
   }
 }
 
-class Client(var nickname: String, val username: String, val fullName: String) {
+class Client(var nickname: String, val username: String, val fullName: String) extends Target {
   object log {
-    var codes: Map[Int, String] = Map[Int, String]()
+    var codes: Map[Int, List[String]] = Map[Int, List[String]]()
     var plain: List[String] = List[String]()
 
     /* === plain log methods === */
@@ -95,7 +95,9 @@ class Client(var nickname: String, val username: String, val fullName: String) {
     def find(input: String): String = plain.find(_.contains(input)).getOrElse("<ERROR>")
 
     /* === code log methods === */
-    def byCode(code: Int): String = codes.getOrElse(code, "")
+    def byCode(code: Int): String = codes.getOrElse(code, List()).headOption.getOrElse("")
+
+    def byCodeAnd(code: Int, param: String): String = codes.getOrElse(code, List()).find(s => s.contains(param)).getOrElse("")
 
     /* === utils === */
     def clearPlain(): Unit = plain = List()
@@ -198,6 +200,11 @@ class Client(var nickname: String, val username: String, val fullName: String) {
     this
   }
 
+  def motd(): Client = {
+    send("MOTD", 3)
+    this
+  }
+
   def lusers(): Client = {
     send("LUSERS", 5)
     this
@@ -270,7 +277,7 @@ class Client(var nickname: String, val username: String, val fullName: String) {
     val code = """(.+?)(\d{3})(.*)""".r
     for (line <- response.payload.split("\r\n")) {
       line match {
-        case code(_, command, _) => log.codes = log.codes + (command.toInt -> line)
+        case code(_, command, _) => log.codes = log.codes + (command.toInt -> (line :: log.codes.getOrElse(command.toInt, List())))
         case _ => log.plain = line :: log.plain
       }
 

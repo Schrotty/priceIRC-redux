@@ -1,7 +1,7 @@
 package de.rubenmaurer.price.test
 
+import com.typesafe.scalalogging.Logger
 import java.util.concurrent.TimeUnit
-
 import akka.util.Timeout
 import de.rubenmaurer.price.core.facade._
 import org.scalactic.Requirements.requireNonNull
@@ -20,6 +20,8 @@ class BaseTestSuite(session: Session, parser: Parser, testName: String) extends 
   }
 
   after {
+    Logger("test").info("")
+
     session.stop()
   }
 

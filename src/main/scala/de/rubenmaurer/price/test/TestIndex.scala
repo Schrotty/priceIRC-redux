@@ -23,7 +23,14 @@ object TestIndex {
 
   private val _assignments: Map[String, List[String]] = Map(
     "ALL" -> _suites.values.toList,
-    "CHANNEL" -> _suites.values.filter(x => x.contains("channel.")).toList
+    "CHANNEL" -> _suites.values.filter(x => x.contains("channel.")).toList,
+    "CONNECTION" -> _suites.values.filter(x => x.contains("connection.")).toList,
+    "MOTD" -> _suites.values.filter(x => x.contains("motd.")).toList,
+    "PING" -> _suites.values.filter(x => x.contains("ping.")).toList,
+    "PRIVMSG" -> _suites.values.filter(x => x.contains("privmsg.")).toList,
+    "ROBUSTNESS" -> _suites.values.filter(x => x.contains("robustness.")).toList,
+    "UNKNOWN" -> _suites.values.filter(x => x.contains("unknown.")).toList,
+    "WHOIS" -> _suites.values.filter(x => x.contains("whois.")).toList,
   )
 
   def getAll(keys: String*): List[String] =

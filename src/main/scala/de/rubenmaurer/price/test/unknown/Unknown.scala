@@ -8,6 +8,6 @@ class Unknown(session: Session, parser: Parser, testName: String) extends BaseTe
     val rachel: Client = session.spawnClient(Client.RACHEl).authenticate()
     rachel.send("UNKNOWN", 1)
 
-    assert(parser.isUnknown(rachel))
+    assert(parser.isUnknown(rachel, "UNKNOWN"))
   }
 }

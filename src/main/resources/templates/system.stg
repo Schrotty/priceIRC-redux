@@ -6,6 +6,7 @@ tests(ts) ::= "Selected Tests: <ts>"
 
 // error messages
 connectionFailure(address) ::= "Unable to establish connection with <address>"
+compareFailure(type, expected, actual, line) ::= "<type> mismatch! Expected: '<expected>' but found '<actual>' in '<line>'!"
 
 // irc templates
 nick(nickname) ::= "NICK <nickname>"

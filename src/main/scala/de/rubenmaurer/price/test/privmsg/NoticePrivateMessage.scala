@@ -10,7 +10,7 @@ class NoticePrivateMessage(session: Session, parser: Parser, testName: String) e
     val rachel: Client = session.spawnClient(Client.RACHEl).authenticate()
 
     rachel.await(() => chloe.privateMessage(rachel, message))
-    assert(parser.isPrivateMessage(rachel))
+    assert(parser.isPrivateMessage(rachel, message))
   }
 
   test("private message with four clients") {
@@ -22,16 +22,16 @@ class NoticePrivateMessage(session: Session, parser: Parser, testName: String) e
     val kate: Client = session.spawnClient(Client.KATE).authenticate()
 
     chloe.await(() => kate.privateMessage(chloe, message))
-    assert(parser.isPrivateMessage(chloe))
+    assert(parser.isPrivateMessage(chloe, message))
 
     max.await(() => chloe.privateMessage(max, message))
-    assert(parser.isPrivateMessage(max))
+    assert(parser.isPrivateMessage(max, message))
 
     rachel.await(() => max.privateMessage(rachel, message))
-    assert(parser.isPrivateMessage(rachel))
+    assert(parser.isPrivateMessage(rachel, message))
 
     kate.await(() => rachel.privateMessage(kate, message))
-    assert(parser.isPrivateMessage(kate))
+    assert(parser.isPrivateMessage(kate, message))
   }
 
   test("simple notice") {
@@ -40,7 +40,7 @@ class NoticePrivateMessage(session: Session, parser: Parser, testName: String) e
     val kate: Client = session.spawnClient(Client.KATE).authenticate()
 
     kate.await(() => max.notice(kate, message))
-    assert(parser.isNotice(kate))
+    assert(parser.isNotice(kate, message))
   }
 
   test("notice not existing user") {

@@ -18,8 +18,9 @@ class AssignmentChannel(session: Session, parser: Parser, testName: String) exte
   }
 
   test("quit with message") {
+    val message: String = "Bye then!"
     val chloe: Client = session.spawnClient(Client.CHLOE).authenticate().join(Channel.DINER)
 
-    assert(parser.isQuit(chloe.quit("Bye then!")))
+    assert(parser.isQuit(chloe.quit(message), message))
   }
 }

@@ -12,16 +12,17 @@ class ListChannel(session: Session, parser: Parser, testName: String) extends Ba
     session.spawnClient(Client.MAX).authenticate().join(channel)
     val chloe: Client = session.spawnClient(Client.CHLOE).authenticate().join(channel).list(channel)
 
-    assert(parser.isList(chloe))
+    assert(parser.isList(chloe, channel, 3))
   }
 
   test("list channel with topic") {
+    val topic: String = "It is a Diner!"
     val channel: Channel = Channel.DINER
 
     session.spawnClient(Client.RACHEl).authenticate().join(channel)
-    session.spawnClient(Client.CHLOE).authenticate().join(channel).topic(channel, "It is a Diner!")
+    session.spawnClient(Client.CHLOE).authenticate().join(channel).topic(channel, topic)
     val chloe: Client = session.spawnClient(Client.KATE).authenticate().join(channel).list(channel)
 
-    assert(parser.isList(chloe))
+    assert(parser.isList(chloe, channel, 3, topic))
   }
 }
