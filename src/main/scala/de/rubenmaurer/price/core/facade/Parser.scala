@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.util.Timeout
 import de.rubenmaurer.price.PriceIRC
-import de.rubenmaurer.price.antlr.{IRCLexer, IRCParser}
+import de.rubenmaurer.price.antlr4.{IRCLexer, IRCParser}
 import de.rubenmaurer.price.core.facade.Parser.{Parse, ParseData, ParseResult}
 import de.rubenmaurer.price.core.parser.antlr.{PricefieldErrorListener, PricefieldListener}
 import de.rubenmaurer.price.util.{Channel, IRCCode, Target}

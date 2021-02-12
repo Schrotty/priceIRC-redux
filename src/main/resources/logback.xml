@@ -44,7 +44,7 @@
         <appender-ref ref="TEST"/>
     </logger>
 
-    <root level="DEBUG">
+    <root name="system" level="DEBUG">
         <appender-ref ref="FILE"/>
     </root>
 </configuration>

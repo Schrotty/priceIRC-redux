@@ -1,10 +1,8 @@
 name := "priceIRC-redux"
-
-version := "0.1"
-
+version := "1.0"
 scalaVersion := "2.13.2"
-
 libraryDependencies ++= Seq(
+
   //ANTLR
   "org.antlr" % "ST4" % "4.3.1",
   "org.antlr" % "antlr4-runtime" % "4.8",
@@ -20,7 +18,7 @@ libraryDependencies ++= Seq(
   "commons-lang" % "commons-lang" % "2.6",
   "com.lihaoyi" %% "os-lib" % "0.6.2",
 
-  //logging
+  //LOGGING
   "ch.qos.logback" % "logback-classic" % "1.2.3",
   "org.apache.logging.log4j" %% "log4j-api-scala" % "12.0",
   "org.apache.logging.log4j" % "log4j-core" % "2.13.0" % Runtime,
@@ -32,11 +30,15 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
 )
 
+// PLUGINS AND SETTINGS
 enablePlugins(Antlr4Plugin)
-antlr4PackageName in Antlr4 := Some("de.rubenmaurer.price.antlr")
+antlr4PackageName in Antlr4 := Some("de.rubenmaurer.price.antlr4")
+antlr4Version in Antlr4 := "4.9.1"
+
+enablePlugins(JavaAppPackaging)
+assemblyJarName in assembly := "priceIRC.jar"
 
 lazy val root = (project in file(".")).
-  enablePlugins(JavaAppPackaging).
   enablePlugins(BuildInfoPlugin).
   settings(buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, buildInfoBuildNumber),
     buildInfoPackage := "de.rubenmaurer.price.util"

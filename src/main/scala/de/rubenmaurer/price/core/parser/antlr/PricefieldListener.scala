@@ -1,6 +1,6 @@
 package de.rubenmaurer.price.core.parser.antlr
 
-import de.rubenmaurer.price.antlr.{IRCBaseListener, IRCParser}
+import de.rubenmaurer.price.antlr4.{IRCBaseListener, IRCParser}
 import de.rubenmaurer.price.core.facade.Parser.ParseData
 import de.rubenmaurer.price.util.TemplateManager
 

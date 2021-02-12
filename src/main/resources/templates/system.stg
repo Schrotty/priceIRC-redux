@@ -1,7 +1,7 @@
 // system messages
 startup() ::= "Project Pricefield - IRC Test-Client"
 runtime(id) ::= "Runtime ID: <id>"
-version(v) ::= "v.<v>"
+version(v, build) ::= "v.<v>.<build>"
 tests(ts) ::= "Selected Tests: <ts>"
 
 // error messages

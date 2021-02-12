@@ -16,7 +16,7 @@ object TemplateManager {
   }
 
   def getStartupMessage: String = getTemplate("startup")
-  def getVersionString: String = getRawTemplate("version").add("v", BuildInfo.version).render()
+  def getVersionString: String = getRawTemplate("version").add("v", BuildInfo.version).add("build", BuildInfo.buildInfoBuildNumber).render()
   def getRuntimeID: String = getRawTemplate("runtime").add("id", Configuration.runtimeIdentifier).render()
   def getTests: String = getRawTemplate("tests").add("ts", TestIndex.getAll("ALL").mkString(",")).render()
   def getConnectionFailure(address: String): String = getRawTemplate("connectionFailure").add("address", address).render()
