@@ -34,7 +34,10 @@ libraryDependencies ++= Seq(
 
 enablePlugins(JavaAppPackaging)
 
+antlr4PackageName in Antlr4 := Some("de.rubenmaurer.price.antlr")
+
 lazy val root = (project in file(".")).
+  enablePlugins(Antlr4Plugin).
   enablePlugins(BuildInfoPlugin).
   settings(
     buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion, buildInfoBuildNumber),
