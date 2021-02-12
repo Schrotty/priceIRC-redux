@@ -30,7 +30,7 @@ object TestIndex {
     "PRIVMSG" -> _suites.values.filter(x => x.contains("privmsg.")).toList,
     "ROBUSTNESS" -> _suites.values.filter(x => x.contains("robustness.")).toList,
     "UNKNOWN" -> _suites.values.filter(x => x.contains("unknown.")).toList,
-    "WHOIS" -> _suites.values.filter(x => x.contains("whois.")).toList,
+    "WHOIS" -> _suites.values.filter(x => x.contains("whois.")).toList
   )
 
   def getAll(keys: String*): List[String] =

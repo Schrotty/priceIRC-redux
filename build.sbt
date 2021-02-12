@@ -1,3 +1,5 @@
+import sbt.Keys.scalacOptions
+
 name := "priceIRC-redux"
 version := "1.0"
 scalaVersion := "2.13.2"
@@ -37,6 +39,15 @@ antlr4Version in Antlr4 := "4.9.1"
 
 enablePlugins(JavaAppPackaging)
 assemblyJarName in assembly := "priceIRC.jar"
+
+inThisBuild(
+  List(
+    scalaVersion := scalaVersion.value,
+    semanticdbEnabled := true, // enable SemanticDB
+    semanticdbVersion := scalafixSemanticdb.revision, // use Scalafix compatible version
+    scalafixScalaBinaryVersion := "2.13"
+  )
+)
 
 lazy val root = (project in file(".")).
   enablePlugins(BuildInfoPlugin).
