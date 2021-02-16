@@ -38,4 +38,4 @@ jobs:
       env:
         codecov_token: ${{ secrets.CODECOV_TOKEN }}
 
-      run: bash <(curl -s -t "$codecov_token" https://codecov.io/bash)
+      run: bash <(curl -s https://codecov.io/bash) -t "$codecov_token"
