@@ -32,4 +32,7 @@ jobs:
         java-version: 15
 
     - name: Run tests
-      run: sbt test
+      run: sbt coverage test coverageReport
+
+    - name: Upload coverage data
+      run: bash <(curl -s -t ${{ CODECOV_TOKEN }} https://codecov.io/bash)
