@@ -1,4 +1,4 @@
 ignore:
   - "src/main/scala/de/rubenmaurer/price/test/"
+  - "src/main/scala/de/rubenmaurer/price/util/"
   - "src/main/scala/de/rubenmaurer/price/test/**/*"
-  - "src/main/scala/de/rubenmaurer/price/util/**/*"
