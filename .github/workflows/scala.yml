@@ -16,9 +16,6 @@ jobs:
       with:
         java-version: 15
 
-    - name: Run scalafix
-      run: sbt scalafix
-
     - name: Run scalastyle
       run: sbt scalastyle
 
