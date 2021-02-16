@@ -35,4 +35,7 @@ jobs:
       run: sbt coverage test coverageReport
 
     - name: Upload coverage data
-      run: bash <(curl -s -t ${{ CODECOV_TOKEN }} https://codecov.io/bash)
+      env:
+        codecov_token: ${{ secrets.CODECOV_TOKEN }}
+
+      run: bash <(curl -s -t "$codecov_token" https://codecov.io/bash)
